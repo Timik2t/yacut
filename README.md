@@ -61,11 +61,7 @@ flask db upgrade
 flask run
 ```
 
-### Справка
-
-![Usage-example](docs/usage_example.gif)
-
-### API (Docs: [OpenAPI](docs/openapi.yml))
+### API (Docs: [OpenAPI](openapi.yml))
 
 - **POST** `/api/id/`
 - **GET** `/api/id/{short_id}/`
