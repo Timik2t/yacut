@@ -1,11 +1,11 @@
 from flask_wtf import FlaskForm
 from wtforms import SubmitField, URLField
-from wtforms.validators import URL, DataRequired, Length, Optional, Regexp, ValidationError
-
-from .constants import (
-    CUSTOM_ID_PATTERN, ORIGINAL_LENGTH,
-    USERS__SHORT_LINK_LENGTH
+from wtforms.validators import (
+    URL, DataRequired, Length,
+    Optional, Regexp, ValidationError
 )
+
+from .constants import MAX_SHORT_LENGTH, ORIGINAL_LENGTH, SHORT_PATTERN
 from .models import URLMap
 
 DESCRIPTION_ORIGINAL_LINK = 'Исходная ссылка'
@@ -34,17 +34,17 @@ class URLMapForm(FlaskForm):
         validators=[
             Optional(),
             Regexp(
-                CUSTOM_ID_PATTERN,
+                SHORT_PATTERN,
                 message=CUSTOM_ID_REQUIRED
             ),
             Length(
-                max=USERS__SHORT_LINK_LENGTH,
-                message=CUSTOM_LENGTH.format(USERS__SHORT_LINK_LENGTH)
+                max=MAX_SHORT_LENGTH,
+                message=CUSTOM_LENGTH.format(MAX_SHORT_LENGTH)
             )
         ]
     )
     submit = SubmitField('Создать')
 
     def validate_custom_id(self, field):
-        if field.data and URLMap.is_short_id_taken(field.data):
+        if field.data and URLMap.get_short_url_map(field.data):
             raise ValidationError(UNIQUE_NAME.format(field.data))

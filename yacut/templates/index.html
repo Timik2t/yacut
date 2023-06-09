@@ -26,11 +26,6 @@
                   {% for error in form.custom_id.errors %} 
                     <p><span style="color:red">{{ error }}</span></p> 
                   {% endfor %} 
-                  {% with messages = get_flashed_messages(category_filter=['danger']) %} 
-                    {% for message in messages %} 
-                      {{ message}} 
-                    {% endfor %} 
-                  {% endwith %} 
                 </div> 
                 <br> 
                   {{ form.submit(class="btn btn-primary") }} 
@@ -49,13 +44,22 @@
           </div> 
           <div class="col-sm"> 
             <p class="text-center"> 
-              {% if short_link %} 
+              {% if short %} 
                 <h5 class="text-center"> 
                   Ваша новая ссылка готова: </br> 
-                  <a href="{{ short_link }}">{{ short_link }}</a> 
+                  <a href="{{ url_for('redirect_to_url', short=short, _external=True) }}">
+                    {{ url_for('redirect_to_url', short=short, _external=True) }}
+                  </a>
                 </h5> 
               {% endif %} 
-            </p> 
+            </p>
+            <p class="py-3 mb-3">
+              {% with messages = get_flashed_messages() %}
+                {% for message in messages %}
+                  {{ message}}
+                {% endfor %}
+              {% endwith %}
+            </p>
           </div> 
           <div class="col-sm"> 
           </div> 

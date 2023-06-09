@@ -7,76 +7,73 @@ from flask import url_for
 from yacut import db
 
 from .constants import (
-    CHARS, CUSTOM_ID_PATTERN,
-    DEFAULT_SHORT_LINK_LENGTH,
-    MAX_ATTEMPTS, ORIGINAL_LENGTH,
-    REDIRECT_URL, USERS__SHORT_LINK_LENGTH
+    DEFAULT_SHORT_LENGTH, MAX_ATTEMPTS, MAX_SHORT_LENGTH,
+    ORIGINAL_LENGTH, REDIRECT_URL_MAP, SHORT_PATTERN,
+    VALID_CHARS
 )
-from .error_handlers import InvalidAPIUsage
 
-INVALID_CUSTOM_ID = 'Указано недопустимое имя для короткой ссылки'
+INVALID_SHORT_СHARS = 'Использованы недопустимые символы!'
 UNIQUE_NAME = 'Имя "{}" уже занято.'
+WRONG_SHORT_LENGTH = (
+    'Превышена длина короткой ссылки '
+    '{user_short_length} > {max_short_length}!'
+)
+GET_SHORT_FAULT = 'Не удалось создать короткую ссылку'
 
 
 class URLMap(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     original = db.Column(db.String(ORIGINAL_LENGTH), nullable=False)
-    short = db.Column(db.String(USERS__SHORT_LINK_LENGTH), unique=True, nullable=False)
+    short = db.Column(db.String(MAX_SHORT_LENGTH), unique=True, nullable=False)
     timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
 
     def to_dict(self):
         return dict(
             url=self.original,
             short_link=url_for(
-                REDIRECT_URL,
-                short_id=self.short,
+                REDIRECT_URL_MAP,
+                short=self.short,
                 _external=True
             )
         )
 
     @staticmethod
-    def from_dict(data):
-        original_url = data['url']
-        custom_id = data.get('custom_id')
-        if custom_id:
-            if URLMap.is_short_id_taken(custom_id):
-                raise InvalidAPIUsage(UNIQUE_NAME.format(custom_id))
-            if not match(CUSTOM_ID_PATTERN, custom_id) or len(custom_id) > USERS__SHORT_LINK_LENGTH:
-                raise InvalidAPIUsage(INVALID_CUSTOM_ID)
-        else:
-            custom_id = URLMap.get_unique_short_id()
-            data['custom_id'] = custom_id
-        return URLMap(original=original_url, short=custom_id)
+    def create(original, short=None, valid_form=False):
+        if not short:
+            short = URLMap.get_unique_short_id()
+        elif not valid_form:
+            if len(short) > MAX_SHORT_LENGTH:
+                raise ValueError(
+                    WRONG_SHORT_LENGTH.format(
+                        max_short_length=MAX_SHORT_LENGTH,
+                        user_short_length=len(short)
+                    )
+                )
+            if not match(SHORT_PATTERN, short):
+                raise ValueError(INVALID_SHORT_СHARS)
+            if URLMap.get_short_url_map(short):
+                raise NameError(UNIQUE_NAME.format(short))
+        url_map = URLMap(original=original, short=short)
+        db.session.add(url_map)
+        db.session.commit()
+        return url_map
 
     @staticmethod
-    def is_short_id_taken(short_id):
-        return URLMap.query.filter_by(short=short_id).first() is not None
+    def get_short_url_map(short_id):
+        return URLMap.query.filter_by(short=short_id).first()
 
     @staticmethod
-    def find_by_short_id(short_id):
+    def find_by_short_id_or_404(short_id):
         return URLMap.query.filter_by(short=short_id).first_or_404()
 
     @staticmethod
     def get_unique_short_id(
-        chars=CHARS,
-        length=DEFAULT_SHORT_LINK_LENGTH,
+        chars=VALID_CHARS,
+        length=DEFAULT_SHORT_LENGTH,
         max_attempts=MAX_ATTEMPTS
     ):
         for _ in range(max_attempts):
             short_id = ''.join(random.choices(chars, k=length))
-            if not URLMap.is_short_id_taken(short_id):
+            if not URLMap.get_short_url_map(short_id):
                 return short_id
-
-    def add_to_db(self):
-        db.session.add(self)
-        db.session.commit()
-
-    @staticmethod
-    def create_from_form(form):
-        original_link = form.original_link.data
-        custom_id = form.custom_id.data
-        if custom_id and URLMap.is_short_id_taken(custom_id):
-            return None
-        elif not custom_id:
-            custom_id = URLMap.get_unique_short_id()
-        return URLMap(original=original_link, short=custom_id)
+        raise ValueError(GET_SHORT_FAULT)
