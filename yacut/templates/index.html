@@ -47,8 +47,8 @@
               {% if short %} 
                 <h5 class="text-center"> 
                   Ваша новая ссылка готова: </br> 
-                  <a href="{{ url_for('redirect_to_url', short=short, _external=True) }}">
-                    {{ url_for('redirect_to_url', short=short, _external=True) }}
+                  <a href="{{ short }}">
+                    {{ short }}
                   </a>
                 </h5> 
               {% endif %} 

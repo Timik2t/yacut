@@ -12,12 +12,9 @@ from .constants import (
     VALID_CHARS
 )
 
-INVALID_SHORT_СHARS = 'Использованы недопустимые символы!'
+INVALID_SHORT_СHARS = 'Указано недопустимое имя для короткой ссылки'
 UNIQUE_NAME = 'Имя "{}" уже занято.'
-WRONG_SHORT_LENGTH = (
-    'Превышена длина короткой ссылки '
-    '{user_short_length} > {max_short_length}!'
-)
+WRONG_ORIGINAL_LENGTH = 'Превышена длина оригинальной ссылки '
 GET_SHORT_FAULT = 'Не удалось создать короткую ссылку'
 
 
@@ -38,42 +35,43 @@ class URLMap(db.Model):
         )
 
     @staticmethod
-    def create(original, short=None, valid_form=False):
+    def create(original, short=None, is_valid=False):
         if not short:
-            short = URLMap.get_unique_short_id()
-        elif not valid_form:
+            short = URLMap.get_unique_short()
+        elif not is_valid:
             if len(short) > MAX_SHORT_LENGTH:
                 raise ValueError(
-                    WRONG_SHORT_LENGTH.format(
-                        max_short_length=MAX_SHORT_LENGTH,
+                    INVALID_SHORT_СHARS.format(
                         user_short_length=len(short)
                     )
                 )
             if not match(SHORT_PATTERN, short):
                 raise ValueError(INVALID_SHORT_СHARS)
-            if URLMap.get_short_url_map(short):
-                raise NameError(UNIQUE_NAME.format(short))
+            if URLMap.get(short):
+                raise ValueError(UNIQUE_NAME.format(short))
+            if len(original) > ORIGINAL_LENGTH:
+                raise ValueError(WRONG_ORIGINAL_LENGTH)
         url_map = URLMap(original=original, short=short)
         db.session.add(url_map)
         db.session.commit()
         return url_map
 
     @staticmethod
-    def get_short_url_map(short_id):
+    def get(short_id):
         return URLMap.query.filter_by(short=short_id).first()
 
     @staticmethod
-    def find_by_short_id_or_404(short_id):
+    def find_or_404(short_id):
         return URLMap.query.filter_by(short=short_id).first_or_404()
 
     @staticmethod
-    def get_unique_short_id(
+    def get_unique_short(
         chars=VALID_CHARS,
         length=DEFAULT_SHORT_LENGTH,
         max_attempts=MAX_ATTEMPTS
     ):
         for _ in range(max_attempts):
             short_id = ''.join(random.choices(chars, k=length))
-            if not URLMap.get_short_url_map(short_id):
+            if not URLMap.get(short_id):
                 return short_id
         raise ValueError(GET_SHORT_FAULT)
