@@ -36,7 +36,7 @@ class URLMap(db.Model):
 
     @staticmethod
     def create(original, short=None, is_valid=False):
-        if len(original) > ORIGINAL_LENGTH:
+        if not is_valid and len(original) > ORIGINAL_LENGTH:
             raise ValueError(WRONG_ORIGINAL_LENGTH)
         if not short:
             short = URLMap.get_unique_short()
