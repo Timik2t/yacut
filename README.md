@@ -1,62 +1,69 @@
 # YaCut
 
+## Описание проекта
+
 Сервис укорачивания ссылок с web интерфейсом и REST API. Его назначение — ассоциировать длинную пользовательскую ссылку с короткой, которую предлагает сам пользователь или предоставляет сервис.
 
-## Возможности:
+### Возможности
 
 - Генерация коротких ссылок и связь их с исходными длинными ссылками
 - Переадресация на исходный адрес при обращении к коротким ссылкам
-- Доступны web и api интерфейсы.
+- Доступны web и api интерфейсы
 
 ## Технологии
 
-Python
-
-FLASK
-
-Jinja2
-
-SQLAlchemy
+- Python
+- FLASK
+- Jinja2
+- SQLAlchemy
 
 ## Подготовка и запуск проекта
 
-### Склонировать репозиторий на локальную машину
+1. Склонируйте репозиторий на локальную машину:
 
-```
-git clone git@github.com:Timik2t/yacut.git
-```
+    ```bash
+    git clone git@github.com:Timik2t/yacut.git
+    ```
 
-В корневой папке проекта нужно создать виртуальное окружение и установить зависимости.
+2. Создайте и активируйте виртуальное окружение:
 
-```
-python -m venv venv
-```
+    ```bash
+    python -m venv venv
+    ```
 
-и
+    Активация окружения
+    ```bash
+    # Windows
+    source venv/Scripts/activate
+    ```
+    ```bash
+    # Linux
+    source venv/bin/activate
+    ```
+3. Установите зависимости:
 
-```
-pip install -r requirements.txt
-```
+    ```bash
+    pip install -r requirements.txt
+    ```
+4. Примените миграции:
 
-В корне проекта создайте `.env` файл**
-```
-FLASK_APP=yacut
-FLASK_DEBUG=1
-DATABASE_URI=<URI базы данных, по умолчанию "sqlite:///db.sqlite3">
-SECRET_KEY=<секретный ключ>
-```
+    ```bash
+    flask db upgrade
+    ```
+5. Создайте файл с переменными окружения `.env` и заполните его данными:
 
-### Запуск
+    ```bash
+    FLASK_APP=yacut
+    FLASK_DEBUG=1
+    DATABASE_URI=<URI базы данных, по умолчанию "sqlite:///db.sqlite3">
+    SECRET_KEY=<секретный ключ>
+    ```
+6. Запуск проекта:
 
-Выполнить миграции:
-```
-flask db upgrade
-```
-
-Запуск сервиса:
-```
-flask run
-```
+    Стандартный запуск:
+    ```bash
+    flask run
+    ```
 
 ### API (Docs: [OpenAPI](openapi.yml))
 
